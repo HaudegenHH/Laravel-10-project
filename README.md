@@ -104,3 +104,78 @@ $user->update(['avatar' => 'new value with update method'])
 ## creating form for uploading an avatar
 
 - after adding the column and knowing how to update the users avatar field, you can start creating the UI for it
+
+- then you will have to define a route and a controller / method 
+- To avoid cluttering the controller method, outsource the validation of the request:
+```sh
+php artisan make:request UpdateAvatarRequest
+``` 
+
+- after storing the absolute path to the stored image in the db, you might want to show the avatar image right away after redirecting
+- since the controller which is responsible for returning the profile page as well returns the $request->user, you have access to the path where the image is stored, but: its the absolute path for the server location of the image, so its useless to have an img-tag with a src that points to that location
+- only accessible folder on the client is the public folder, therefore the avatar images that are stored under /storage/app/avatars/..  cannot be reached
+- that means you have to create a sym link from the storage to the public directory
+```sh
+php artisan storage:link
+```
+
+"The [C:\....\projectName\public\storage] link has been connected to [C:\Users\projectName\storage\app/public]"
+
+- still not looking great, like i commented in the AvatarController: the store method has a 2nd optionally parameter with which you can define the disk, meaning: the root 
+- now you can store the relative paths which points to the public/storage/avatars  thanks to the symbolic link
+
+- deleting existing/old avatars with the Storage Facade
+- its also helpful to store the avatars in a more convenient and readable manner
+```sh
+$path = Storage::disk('public')->put('avatars', $request->file('avatar'));
+```
+
+---
+
+Open AI - PHP Client
+
+- first install OpenAI via composer package manager:
+```sh
+composer require openai-php/laravel
+```
+- publish the configuration file next:
+```sh
+php artisan vendor:publish --provider="OpenAI\Laravel\ServiceProvider"
+```
+
+This will create a **config/openai.php** configuration file in your project, which you can modify to your needs using environment variables:
+OPENAI_API_KEY=....
+
+- then interact with the api by using the OpenAI facade:
+```sh
+use OpenAI\Laravel\Facades\OpenAI;
+
+$client = OpenAI::client('YOUR_API_KEY');
+$result = $client->completions()->create([
+    'model' => 'text-davinci-003',
+    'prompt' => 'PHP is'
+]);
+echo $result['choices'][0]['text'];
+``` 
+
+- to get the api key visit:
+ openai.com 
+- sign in with google
+- create "new secret key"
+- copy that key and paste it into .env
+
+
+- in the left sidebar you find "Usage" 
+- free trial usage: $5.00
+- but: instead of "completions", we want openai to create images for us:
+  
+```sh
+$result = OpenAI::images()->create([
+  "prompt" => "create avatar for user with name " . auth()->user()->name,
+  "n"      => 1,
+  "size"   => "256x256",
+]);
+```
+## integrate image/avatar generation on profile page
+- create a form with just one button for generating the avatar
+- create the route, controller and method for it (AvatarController)
