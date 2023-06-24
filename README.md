@@ -176,6 +176,56 @@ $result = OpenAI::images()->create([
   "size"   => "256x256",
 ]);
 ```
+
 ## integrate image/avatar generation on profile page
+
 - create a form with just one button for generating the avatar
 - create the route, controller and method for it (AvatarController)
+
+---
+
+## Login with github or google
+- for that you will need the package: "Socialite"
+"In addition to typical, form based authentication, Laravel also provides a simple, convenient way to authenticate with OAuth providers using Laravel Socialite.
+Socialite currently supports authentication via Facebook, Twitter, LinkedIn, Google, GitHub, GitLab and Bitbucket."
+
+- install the package:
+```sh
+composer require laravel/socialite
+```
+- like described in the docs (https://laravel.com/docs/10.x/socialite)
+you need to place some credentials in your "config/services.php" depending on the providers your app requires, eg:
+```sh
+'github' => [
+    'client_id' => env('GITHUB_CLIENT_ID'),
+    'client_secret' => env('GITHUB_CLIENT_SECRET'),
+    'redirect' => env('GITHUB_REDIRECT_URL'),
+],
+```
+
+- then you have to create 2 routes for redirect and callback which you register in the web.php
+- next is the registration of a new OAuth App in your Github Account
+(homepage-url: http://localhost:8000, callback-url: http://localhost:8000/auth/callback)
+- copy the client ID and generate a client secret and put both into the .env
+- try out the route "localhost:8000/auth/redirect" manually (since we have no button yet for sigin with github), and you should see the authorize screen, where you can choose your github-account to sign in with. Then the "/auth/callback" should be triggered - the callback function that runs after successfully authenticate the user. 
+- if you have problems with that its probably cache related, try out:
+```sh
+php artisan cache:clear
+```
+and
+```sh
+composer dump-autoload
+```
+otherwise look at: https://laravel.com/docs/10.x/socialite#authentication-and-storage
+
+- in the callback fn you have (after successful authentication with the choosen github-account) the github user information 
+- with that you can make use of the eloquent method "updateOrCreate" - so you can either create a user entry in your mysql database if it doesnt exist or you can update the existing user in the DB.
+- in short: 
+  - first get the user from github
+  - then using the eloquent user model check if a user is avaibable in the DB with an email that match the email from the github-account
+  - if there is a user with that email then update name and password (provided in the 2nd array) if not then just create a new user with name, password and email
+- another way would be to utilize the "firstOrCreate" method which returns the found user without updating.\
+  
+**Note**: its not neccessary for a github account to have a name saved, but there is always a nickname, thats why i made use of the null coalescing operator (ternary that checks for null: 'name' => $githubUser->name ?? $githubUser->nickname )
+
+- finally create a button for signing in with github wrapped with a form that leads to the redirect route defined in the web.php

@@ -42,7 +42,7 @@ class AvatarController extends Controller
         return redirect(route('profile.edit'))->with('message', 'Avatar is updated');
     }
 
-    public function generate() {
+    public function generate(Request $request) {
         
         $result = OpenAI::images()->create([
             "prompt" =>"create avatar for user with name " . auth()->user()->name,
@@ -61,6 +61,11 @@ class AvatarController extends Controller
 
         $filename = Str::random(25);
         
+        // deleting already existing avatars
+        if ($oldAvatar = $request->user()->avatar) {
+            Storage::disk('public')->delete($oldAvatar);
+        }
+
         // like in update() put the image into the public/avatars folder 
         Storage::disk('public')->put("avatars/$filename.jpg", $content);
 

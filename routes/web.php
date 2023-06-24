@@ -6,7 +6,9 @@ use App\Http\Controllers\Profile\AvatarController;
 
 
 use OpenAI\Laravel\Facades\OpenAI;
-
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +39,37 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+
+// github sign in / redirect
+Route::post('/auth/redirect', function() {
+    return Socialite::driver('github')->redirect();
+})->name('login.github');
+
+Route::get('/auth/callback', function() {
+    $githubUser  = Socialite::driver('github')->user();
+    
+    // dd($githubUser->email);
+
+    // $user = User::updateOrCreate([
+    //     'email' => $githubUser->email,
+    // ], [
+    //     'name' => $githubUser->name ?? $githubUser->nickname,
+    //     'password' => 'password'
+    // ]);
+    $user = User::firstOrCreate([
+        'email' => $githubUser->email,
+    ], [
+        'name' => $githubUser->name ?? $githubUser->nickname,
+        'password' => 'password'
+    ]);
+ 
+    Auth::login($user);
+ 
+    return redirect('/dashboard');
+});
+
+
 
 // just to test the openai, i create a route and a closure
 Route::get('/openai', function() {
