@@ -3,11 +3,13 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Profile\AvatarController;
+use App\Http\Controllers\TicketController;
 
 
 use OpenAI\Laravel\Facades\OpenAI;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
+use App\Models\Ticket;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -88,4 +90,15 @@ Route::get('/openai', function() {
       
     // dd($result->data[0]->url);
     return response(['url' => $result->data[0]->url]);
+});
+
+// create ticket
+
+Route::middleware('auth')->group(function() {
+
+    // Route::get('/ticket/create', [TicketController::class, 'create'])->name('ticket.create');
+    // Route::post('/ticket/store', [TicketController::class, 'store'])->name('ticket.store');
+
+    // or (since i ve a resource controller) simply:
+    Route::resource('ticket', TicketController::class);
 });

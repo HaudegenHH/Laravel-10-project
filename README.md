@@ -229,3 +229,29 @@ otherwise look at: https://laravel.com/docs/10.x/socialite#authentication-and-st
 **Note**: its not neccessary for a github account to have a name saved, but there is always a nickname, thats why i made use of the null coalescing operator (ternary that checks for null: 'name' => $githubUser->name ?? $githubUser->nickname )
 
 - finally create a button for signing in with github wrapped with a form that leads to the redirect route defined in the web.php
+
+---
+
+## Ticketsystem
+
+1. User can create a new help ticket
+2. User can give the ticket a title and a description
+3. User can upload a document (jpg, pdf,..) 
+4. Admin can reply on help ticket
+5. Admin can reject or resolve the ticket
+6. When admin updates the ticket then the user will get one notification via email that the ticket status is updated
+
+### Table Structure
+1. tickets 
+  - title (string), {required}
+  - descritption (text), {required} 
+  - status (Enums: open {default}, resolved, rejected), 
+  - attachments (string), {nullable}
+  - user_id (integer),  {required}
+  - status_change_by (integer) {nullable}
+2. replies 
+  - body (text) {required}, 
+  - user_id (int) {required}, 
+  - ticket_id (int) {required}
+
+  **Note:** When creating a ticket, it is open by default.
